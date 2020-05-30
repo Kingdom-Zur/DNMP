@@ -1,0 +1,57 @@
+version: "3.8"
+networks:
+  dnmp:
+services:
+  nginx:
+    image: nginx
+    #定义容器名称
+    container_name: nginx
+    #修改内核参数
+    sysctls:
+      #关闭洪水防御
+      - net.ipv4.tcp_syncookies=0
+      #修改最大连接
+      - net.core.somaxconn=2048
+    networks:
+      - dnmp
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - D:\PhpstormProjects\www:/usr/share/nginx/html:rw
+      - ./nginx/root/etc/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/root/etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  php:
+    build: ./php
+    container_name: php
+    networks:
+      - dnmp
+    expose:
+      - "9000"
+    ports:
+      - "9501:9501"
+    volumes:
+      - D:/PhpstormProjects/www:/var/www/html/:rw
+      - ./php/root/usr/local/etc/php-fpm.conf:/usr/local/etc/php-fpm.conf:ro
+      - ./php/root/usr/local/etc/php/php.ini:/usr/local/etc/php/php.ini:ro
+      - ./php/root/usr/local/etc/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
+  mysql:
+    image: mysql
+    container_name: mysql
+    networks:
+      - dnmp
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/root/etc/mysql/my.cnf:/etc/mysql/my.cnf:rw
+      - ./mysql/root/etc/mysql/conf.d/mysql.cnf:/etc/mysql/conf.d/mysql.cnf:rw
+      - ./mysql/root/var/lib/mysql:/var/lib/mysql:rw
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+  redis:
+    image: redis
+    container_name: redis
+    networks:
+      - dnmp
+    expose:
+      - "6379"
